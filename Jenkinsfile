@@ -7,16 +7,19 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/ajaymadamshetty/Project1/'
             }
         }
+        
         stage('Compile') {
             steps {
                 sh "mvn compile"
             }
         }
+        
         stage('Grype FS Scan') {
             steps {
                 sh "grype dir:. --output table > fs.html"
             }
         }
+        
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -24,16 +27,21 @@ pipeline {
                 }
             }
         }
+        
         stage('Build') {
             steps {
                 sh "mvn package"
             }
         }
+        
         stage('Publish Artifacts') {
             steps {
-                sh "mvn deploy"
+                withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh "mvn deploy -DrepositoryId=maven-releases -Durl=http://98.84.96.68:8081/repository/maven-releases/ -Dusername=$NEXUS_USER -Dpassword=$NEXUS_PASS"
+                }
             }
         }
+        
         stage('Docker Build & Tag') {
             steps {
                 script {
@@ -43,11 +51,13 @@ pipeline {
                 }
             }
         }
+        
         stage('Grype Image Scan') {
             steps {
                 sh "grype ugogabriel/gab-blogging-app:latest --output table > image.html"
             }
         }
+        
         stage('Docker Push Image') {
             steps {
                 script {
@@ -57,6 +67,7 @@ pipeline {
                 }
             }
         }
+        
         stage('K8s Deploy') {
             steps {
                 withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
@@ -65,6 +76,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Verify Deployment') {
             steps {
                 withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
@@ -74,38 +86,38 @@ pipeline {
             }
         }
     }
-}
 
-post {
-    always {
-        script {
-            def jobName = env.JOB_NAME
-            def buildNumber = env.BUILD_NUMBER
-            def pipelineStatus = currentBuild.result ?: 'UNKNOWN'
-            pipelineStatus = pipelineStatus.toUpperCase()
-            def bannerColor = pipelineStatus == 'SUCCESS' ? 'green' : 'red'
+    post {
+        always {
+            script {
+                def jobName = env.JOB_NAME
+                def buildNumber = env.BUILD_NUMBER
+                def pipelineStatus = currentBuild.result ?: 'UNKNOWN'
+                pipelineStatus = pipelineStatus.toUpperCase()
+                def bannerColor = pipelineStatus == 'SUCCESS' ? 'green' : 'red'
 
-            def body = """
-            <body>
-                <div style="border: 2px solid ${bannerColor}; padding: 10px;">
-                    <h3 style="color: ${bannerColor};">
-                        Pipeline Status: ${pipelineStatus}
-                    </h3>
-                    <p>Job: ${jobName}</p>
-                    <p>Build Number: ${buildNumber}</p>
-                    <p>Status: ${pipelineStatus}</p>
-                </div>
-            </body>
-            """
+                def body = """
+                <body>
+                    <div style=\"border: 2px solid ${bannerColor}; padding: 10px;\">
+                        <h3 style=\"color: ${bannerColor};\">
+                            Pipeline Status: ${pipelineStatus}
+                        </h3>
+                        <p>Job: ${jobName}</p>
+                        <p>Build Number: ${buildNumber}</p>
+                        <p>Status: ${pipelineStatus}</p>
+                    </div>
+                </body>
+                """
 
-            emailext(
-                subject: "${jobName} - Build ${buildNumber} - ${pipelineStatus}",
-                body: body,
-                to: 'madamshettyajay@gmail.com',
-                from: 'jenkins@example.com',
-                replyTo: 'jenkins@example.com',
-                mimeType: 'text/html'
-            )
+                emailext(
+                    subject: "${jobName} - Build ${buildNumber} - ${pipelineStatus}",
+                    body: body,
+                    to: 'madamshettyajay@gmail.com',
+                    from: 'jenkins@example.com',
+                    replyTo: 'jenkins@example.com',
+                    mimeType: 'text/html'
+                )
+            }
         }
     }
 }
