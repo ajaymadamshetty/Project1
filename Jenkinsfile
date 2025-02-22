@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    tools {
-        jdk "jdk"
-        maven "maven"
-    }
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
     }
@@ -39,9 +35,7 @@ pipeline {
         }
         stage('Publish Artifacts') {
             steps {
-                withMaven(globalMavenSettingsConfig: 'maven-settings', jdk: 'jdk', maven: 'maven', mavenSettingsConfig: '', traceability: true) {
-                    sh "mvn deploy"
-                }
+                sh "mvn deploy"
             }
         }
         stage('Docker Build & Tag') {
@@ -83,22 +77,18 @@ pipeline {
                 }
             }
         }
-    }  // Closing stages
-}  // Closing pipeline
+    }
+}
 
 post {
     always {
         script {
-            // Get job name, build number, and pipeline status
             def jobName = env.JOB_NAME
             def buildNumber = env.BUILD_NUMBER
             def pipelineStatus = currentBuild.result ?: 'UNKNOWN'
             pipelineStatus = pipelineStatus.toUpperCase()
-            
-            // Set the banner color based on the status
             def bannerColor = pipelineStatus == 'SUCCESS' ? 'green' : 'red'
 
-            // HTML body for the email
             def body = """
             <body>
                 <div style="border: 2px solid ${bannerColor}; padding: 10px;">
@@ -112,15 +102,14 @@ post {
             </body>
             """
 
-            // Send email notification
             emailext(
                 subject: "${jobName} - Build ${buildNumber} - ${pipelineStatus}",
                 body: body,
-                to: 'madamshettyajay@gmail.com',
+                to: 'ougabriel@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
                 mimeType: 'text/html'
             )
         }
-    } // Closing always block
-} // Closing post block
+    }
+}
