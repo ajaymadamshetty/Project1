@@ -61,7 +61,7 @@ pipeline {
         stage('Docker Push Image') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
+                    withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://github.com/ajay8055/project1.git') {
                         sh "docker push ugogabriel/gab-blogging-app:latest"
                     }
                 }
