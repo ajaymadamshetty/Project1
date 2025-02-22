@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://hub.docker.com/v2/'
+                git branch: 'main', url: 'https://github.com/ajaymadamshetty/Project1'
             }
         }
         
@@ -45,7 +45,7 @@ pipeline {
         stage('Docker Build & Tag') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://hub.docker.com/u/ajay8055') {
+                    withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://github.com/ajay8055/project1.git') {
                         sh "docker build -t ugogabriel/gab-blogging-app:latest ."
                     }
                 }
