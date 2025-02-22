@@ -19,14 +19,8 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqubeServer') {
-                    sh '''
-                    sonar-scanner \
-                      -Dsonar.projectName=Blogging-app \
-                      -Dsonar.projectKey=Blogging-app \
-                      -Dsonar.sources=. \
-                      -Dsonar.java.binaries=target
-                    '''
+                withSonarQubeEnv('SonarQube-Server') {
+                    sh "mvn sonar:sonar"
                 }
             }
         }
