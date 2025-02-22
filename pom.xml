@@ -109,11 +109,11 @@
 	<!-- Distribution Management for Nexus Repository -->
 	<distributionManagement>
 		<repository>
-			<id>maven-releases</id>
+			<id>admin</id>
 			<url>http://98.84.96.68:8081/repository/maven-releases/</url>
 		</repository>
 		<snapshotRepository>
-			<id>maven-snapshots</id>
+			<id>admin</id>
 			<url>http://98.84.96.68:8081/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
