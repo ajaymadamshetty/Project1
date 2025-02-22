@@ -36,7 +36,7 @@ pipeline {
         
         stage('Publish Artifacts') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'admin', passwordVariable: 'Admin@123456789')]) {
                     sh "mvn deploy -DrepositoryId=maven-releases -Durl=http://98.84.96.68:8081/repository/maven-releases/ -Dusername=$NEXUS_USER -Dpassword=$NEXUS_PASS"
                 }
             }
