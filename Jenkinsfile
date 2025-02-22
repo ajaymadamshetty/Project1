@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://github.com/ajay8055/project1.git') {
-                        sh "docker build -t ugogabriel/gab-blogging-app:latest ."
+                        sh "docker build -t ajay8055/project1:latest ."
                     }
                 }
             }
@@ -54,7 +54,7 @@ pipeline {
         
         stage('Grype Image Scan') {
             steps {
-                sh "grype ugogabriel/gab-blogging-app:latest --output table"
+                sh "grype ajay8055/project1:latest --output table"
             }
         }
         
@@ -62,7 +62,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://github.com/ajay8055/project1.git') {
-                        sh "docker push ugogabriel/gab-blogging-app:latest"
+                        sh "docker push ajay8055/project1:latest"
                     }
                 }
             }
