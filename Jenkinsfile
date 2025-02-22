@@ -1,9 +1,6 @@
 pipeline {
     agent any
-    environment {
-        SCANNER_HOME = tool 'sonar-scanner'
-    }
-    
+
     stages {
         stage('Git Checkout') {
             steps {
@@ -23,8 +20,13 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonarqubeServer') {
-                    sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Blogging-app -Dsonar.projectKey=Blogging-app \
-                          -Dsonar.java.binaries=target'''
+                    sh '''
+                    sonar-scanner \
+                      -Dsonar.projectName=Blogging-app \
+                      -Dsonar.projectKey=Blogging-app \
+                      -Dsonar.sources=. \
+                      -Dsonar.java.binaries=target
+                    '''
                 }
             }
         }
