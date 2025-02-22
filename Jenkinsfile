@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/ougabriel/full-stack-blogging-app.git'
+                git branch: 'main', url: 'https://github.com/ajaymadamshetty/Project1/'
             }
         }
         stage('Compile') {
@@ -19,9 +19,9 @@ pipeline {
                 sh "mvn compile"
             }
         }
-        stage('Trivy FS') {
+        stage('Grype FS Scan') {
             steps {
-                sh "trivy fs . --format table -o fs.html"
+                sh "grype dir:. --output table > fs.html"
             }
         }
         stage('SonarQube Analysis') {
@@ -46,30 +46,30 @@ pipeline {
         }
         stage('Docker Build & Tag') {
             steps {
-                script{
-                withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
-                sh "docker build -t ugogabriel/gab-blogging-app ."
-                }
+                script {
+                    withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
+                        sh "docker build -t ugogabriel/gab-blogging-app ."
+                    }
                 }
             }
         }
-        stage('Trivy Image Scan') {
+        stage('Grype Image Scan') {
             steps {
-                sh "trivy image --format table -o image.html ugogabriel/gab-blogging-app:latest"
+                sh "grype ugogabriel/gab-blogging-app:latest --output table > image.html"
             }
         }
         stage('Docker Push Image') {
             steps {
-                script{
-                withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
-                    sh "docker push ugogabriel/gab-blogging-app"
-                }
+                script {
+                    withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
+                        sh "docker push ugogabriel/gab-blogging-app"
+                    }
                 }
             }
         }
         stage('K8s Deploy') {
             steps {
-               withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: ' devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
+               withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
                     sh "kubectl apply -f deployment-service.yml"
                     sleep 20
                 }
@@ -77,7 +77,7 @@ pipeline {
         }
         stage('Verify Deployment') {
             steps {
-               withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: ' devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
+               withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
                     sh "kubectl get pods"
                     sh "kubectl get service"
                 }
@@ -123,5 +123,3 @@ post {
             )
         }
     }
-}
-
