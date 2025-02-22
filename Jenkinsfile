@@ -45,7 +45,7 @@ pipeline {
         stage('Docker Build & Tag') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
+                    withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://hub.docker.com/u/ajay8055') {
                         sh "docker build -t ugogabriel/gab-blogging-app:latest ."
                     }
                 }
