@@ -70,7 +70,7 @@ pipeline {
         
         stage('K8s Deploy') {
             steps {
-                withKubeConfig(kubeconfigId: 'k8s-token') {
+                withKubeConfig([credentialsId: 'k8s-token']) {
                     sh "kubectl apply -f deployment-service.yml"
                     sleep 20
                 }
@@ -79,7 +79,7 @@ pipeline {
         
         stage('Verify Deployment') {
             steps {
-                withKubeConfig(kubeconfigId: 'k8s-token') {
+                withKubeConfig([credentialsId: 'k8s-token']) {
                     sh "kubectl get pods"
                     sh "kubectl get services"
                 }
