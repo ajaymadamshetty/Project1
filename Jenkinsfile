@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/ajaymadamshetty/Project1/'
+                git branch: 'main', url: 'https://github.com/ajaymadamshetty/Project1'
             }
         }
         
@@ -16,7 +16,7 @@ pipeline {
         
         stage('Grype FS Scan') {
             steps {
-                sh "grype dir:. --output table > fs.html"
+                sh "grype dir:. --output table"
             }
         }
         
@@ -36,7 +36,7 @@ pipeline {
         
         stage('Publish Artifacts') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'admin', passwordVariable: 'Admin@123456789')]) {
+                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                     sh "mvn deploy -DrepositoryId=maven-releases -Durl=http://98.84.96.68:8081/repository/maven-releases/ -Dusername=$NEXUS_USER -Dpassword=$NEXUS_PASS"
                 }
             }
@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
-                        sh "docker build -t ugogabriel/gab-blogging-app ."
+                        sh "docker build -t ugogabriel/gab-blogging-app:latest ."
                     }
                 }
             }
@@ -54,7 +54,7 @@ pipeline {
         
         stage('Grype Image Scan') {
             steps {
-                sh "grype ugogabriel/gab-blogging-app:latest --output table > image.html"
+                sh "grype ugogabriel/gab-blogging-app:latest --output table"
             }
         }
         
@@ -62,7 +62,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'dockerhub-cred', url: 'https://index.docker.io/v1/') {
-                        sh "docker push ugogabriel/gab-blogging-app"
+                        sh "docker push ugogabriel/gab-blogging-app:latest"
                     }
                 }
             }
@@ -70,7 +70,7 @@ pipeline {
         
         stage('K8s Deploy') {
             steps {
-                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
+                withKubeConfig([credentialsId: 'k8s-token', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']) {
                     sh "kubectl apply -f deployment-service.yml"
                     sleep 20
                 }
@@ -79,9 +79,9 @@ pipeline {
         
         stage('Verify Deployment') {
             steps {
-                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'devopsshack-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']]) {
+                withKubeConfig([credentialsId: 'k8s-token', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']) {
                     sh "kubectl get pods"
-                    sh "kubectl get service"
+                    sh "kubectl get services"
                 }
             }
         }
@@ -92,8 +92,7 @@ pipeline {
             script {
                 def jobName = env.JOB_NAME
                 def buildNumber = env.BUILD_NUMBER
-                def pipelineStatus = currentBuild.result ?: 'UNKNOWN'
-                pipelineStatus = pipelineStatus.toUpperCase()
+                def pipelineStatus = currentBuild.result ?: 'SUCCESS'
                 def bannerColor = pipelineStatus == 'SUCCESS' ? 'green' : 'red'
 
                 def body = """
