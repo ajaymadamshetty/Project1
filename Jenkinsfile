@@ -36,8 +36,8 @@ pipeline {
         
         stage('Publish Artifacts') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                    sh "mvn deploy -DrepositoryId=maven-releases -Durl=http://98.84.96.68:8081/repository/maven-releases/ -Dusername=$NEXUS_USER -Dpassword=$NEXUS_PASS"
+                withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh 'mvn deploy -DrepositoryId=maven-releases -Durl=http://98.84.96.68:8081/repository/maven-releases/ -Dusername=$NEXUS_USER -Dpassword=$NEXUS_PASS'
                 }
             }
         }
@@ -70,7 +70,7 @@ pipeline {
         
         stage('K8s Deploy') {
             steps {
-                withKubeConfig([credentialsId: 'k8s-token', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']) {
+                withKubeConfig(kubeconfigId: 'k8s-token') {
                     sh "kubectl apply -f deployment-service.yml"
                     sleep 20
                 }
@@ -79,7 +79,7 @@ pipeline {
         
         stage('Verify Deployment') {
             steps {
-                withKubeConfig([credentialsId: 'k8s-token', serverUrl: 'https://AD1D9143EC6B3C8A72B36759FA28854D.gr7.eu-west-2.eks.amazonaws.com']) {
+                withKubeConfig(kubeconfigId: 'k8s-token') {
                     sh "kubectl get pods"
                     sh "kubectl get services"
                 }
@@ -93,12 +93,12 @@ pipeline {
                 def jobName = env.JOB_NAME
                 def buildNumber = env.BUILD_NUMBER
                 def pipelineStatus = currentBuild.result ?: 'SUCCESS'
-                def bannerColor = pipelineStatus == 'SUCCESS' ? 'green' : 'red'
+                def bannerColor = (pipelineStatus == 'SUCCESS') ? 'green' : 'red'
 
                 def body = """
                 <body>
-                    <div style=\"border: 2px solid ${bannerColor}; padding: 10px;\">
-                        <h3 style=\"color: ${bannerColor};\">
+                    <div style="border: 2px solid ${bannerColor}; padding: 10px;">
+                        <h3 style="color: ${bannerColor};">
                             Pipeline Status: ${pipelineStatus}
                         </h3>
                         <p>Job: ${jobName}</p>
